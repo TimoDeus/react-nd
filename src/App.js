@@ -1,39 +1,48 @@
 import React, {Component} from 'react';
+import {Route} from 'react-router-dom';
 import ListContacts from './ListContacts.js';
+import CreateContact from './CreateContact.js';
+import * as ContactApi from './utils/ContactsAPI.js';
 
 class App extends Component {
 
 	state = {
-		contacts: [
-			{
-				"id": "ryan",
-				"name": "Ryan Florence",
-				"email": "ryan@reacttraining.com",
-				"avatarURL": "http://localhost:5001/ryan.jpg"
-			},
-			{
-				"id": "michael",
-				"name": "Michael Jackson",
-				"email": "michael@reacttraining.com",
-				"avatarURL": "http://localhost:5001/michael.jpg"
-			},
-			{
-				"id": "tyler",
-				"name": "Tyler McGinnis",
-				"email": "tyler@reacttraining.com",
-				"avatarURL": "http://localhost:5001/tyler.jpg"
-			}
-		]
+		contacts: []
 	};
 
-	removeContact = contact => this.setState(prevState => ({
-		contacts: prevState.contacts.filter(c => c.id !== contact.id)
-	}));
+	componentDidMount() {
+		this.fetchContacts();
+	}
+
+	fetchContacts = () => ContactApi.getAll().then(contacts => this.setState({contacts}));
+
+	removeContact = contact => {
+		this.setState(prevState => ({
+			contacts: prevState.contacts.filter(c => c.id !== contact.id)
+		}));
+		ContactApi.remove(contact);
+	};
+
+	createContact = history => values => {
+		ContactApi.create(values).then(contact => {
+				this.setState(state => ({
+					contacts: state.contacts.concat([contact])
+				}));
+				history.push('/');
+			}
+		);
+	};
 
 	render() {
 		return (
 			<div>
-				<ListContacts onDeleteContact={this.removeContact} contacts={this.state.contacts}/>
+				<Route exact path='/' render={() => (
+					<ListContacts onDeleteContact={this.removeContact}
+								  contacts={this.state.contacts}/>
+				)}/>
+				<Route path='/create' render={({history}) => (
+					<CreateContact onCreateContract={this.createContact(history)}/>
+				)}/>
 			</div>
 		)
 	}

@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import escapeRegExp from 'escape-string-regexp';
 import sortBy from 'sort-by';
+import {Link} from "react-router-dom";
 
 class ListContacts extends Component {
 
@@ -15,28 +16,34 @@ class ListContacts extends Component {
 	};
 
 	updateQuery = newQuery => this.setState({query: newQuery.trim()});
+
 	clearQuery = () => this.updateQuery('');
+
+	getContactsToShow = () => {
+		const {contacts} = this.props;
+		const {query} = this.state;
+		const match = new RegExp(escapeRegExp(query), 'i');
+		const contactsToShow = query ? contacts.filter(contact => match.test(contact.name)) : contacts;
+		contactsToShow.sort(sortBy('name'));
+		return contactsToShow;
+	};
 
 	render() {
 		const {contacts, onDeleteContact} = this.props;
 		const {query} = this.state;
-		let contactsToShow;
-		if (query) {
-			const match = new RegExp(escapeRegExp(query), 'i');
-			contactsToShow = contacts.filter(contact => match.test(contact.name));
-		} else {
-			contactsToShow = contacts;
-		}
-		contactsToShow.sort(sortBy('name'));
+		const contactsToShow = this.getContactsToShow();
 		return (
 			<div className='list-contacts'>
 				<div className='list-contacts-top'>
 					<input className='search-contacts'
-							 type='text'
-							 placeholder='Search contacts'
-							 value={query}
-							 onChange={event => this.updateQuery(event.target.value)}
+						   type='text'
+						   placeholder='Search contacts'
+						   value={query}
+						   onChange={event => this.updateQuery(event.target.value)}
 					/>
+					<Link to='/create' className='add-contact'>
+						Add contact
+					</Link>
 				</div>
 
 				{contactsToShow.length !== contacts.length && (
